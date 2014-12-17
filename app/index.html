@@ -1,17 +1,10 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Chronicle</title>
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="bower_components/normalize-css/normalize.css">
-    <link rel="stylesheet" href="styles/main.css">
-  </head>
-  <body>
-    <h1>Chronicle</h1>
-    <div id="stage"></div>
-    <script data-main="scripts/main" src="bower_components/requirejs/require.js"></script>
-  </body>
-</html>
+<script src="dist/scripts/vendor/jquery.js"></script>
+<script src="dist/scripts/vendor/underscore.js"></script>
+<script src="dist/scripts/vendor/backbone.js"></script>
+<script src="dist/scripts/vendor/fxa-relier-client.js"></script>
+<script src="dist/scripts/app.js"></script>
+<p>u see me?
+<div class="login" style="width:100px; height: 50px; background: red">click here to log in</div>
+<div>session is {{session}}</div>

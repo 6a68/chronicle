@@ -1,0 +1,9 @@
+<!doctype html>
+<h1> you been logged in, son!</h1>
+<div id="foo">click to log back out</div>
+<script>
+var logoutEl = document.getElementById('foo');
+logoutEl.addEventListener('click', function(e) {
+  window.location = '/auth/logout';
+});
+</script>

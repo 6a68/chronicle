@@ -19,11 +19,21 @@
   "server": {
     "log": {
       "app": "chronicle",
-      "debug": true,
+      "debug": false,
       "fmt": "pretty",
       "level": "verbose"
     },
     "host": "127.0.0.1",
-    "port": 8080
+    "port": 8080,
+    "oauth": {
+      "client_id": "asdfjkl",
+      "client_secret": "asdfjklasdfjkl",
+      "redirect_uri": "http://localhost:8080/auth/complete",
+      "scope": "profile",
+      "oauth_uri": "https://oauth-latest.dev.lcip.org/v1",
+      "profile_uri": "https://latest.dev.lcip.org/profile/v1"
+    },
+    "staticPath": "app",
+    "staticDirListing": true
   }
 }
