@@ -8,7 +8,6 @@ var fs = require('fs');
 var path = require('path');
 
 var convict = require('convict');
-var SEVEN_DAYS_IN_MSEC = 1000 * 60 * 60 * 24 * 7;
 
 var conf = convict({
   env: {
@@ -158,7 +157,8 @@ var conf = convict({
       },
       duration: {
         doc: 'Default session TTL for authenticated users.',
-        default: SEVEN_DAYS_IN_MSEC,
+        format: 'duration',
+        default: '7 days',
         env: 'SESSION_DURATION'
       }
     }
