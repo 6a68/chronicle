@@ -12,6 +12,7 @@
     "convict": "0.6.0",
     "hapi": "8.0.0",
     "hapi-auth-cookie": "2.0.0",
+    "joi": "^5.0.2",
     "load-grunt-tasks": "1.0.0",
     "mozlog": "1.0.0",
     "mysql": "2.5.3",

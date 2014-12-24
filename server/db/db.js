@@ -64,6 +64,26 @@ module.exports = {
         cb(err, result);
       });
     });
+  },
+  getVisits: function(fxaId, count, offset, cb) {
+    var query = 'SELECT url_hash, url, title, favicon_url, content, ' +
+                'image_url, image_height, image_width ' +
+                'FROM visits ' +
+                'WHERE fxa_id = ? ' +
+                'LIMIT ? OFFSET ?';
+    _getConn(function(err, conn) {
+      if (err) {
+        return cb(err);
+      }
+      conn.query(query, [fxaId, count, offset], function(err, results) {
+        if (err) {
+          log.warn('error getting visits: ' + err);
+        }
+        conn.release();
+
+        cb(err, results);
+      });
+    });
   }
 };
 

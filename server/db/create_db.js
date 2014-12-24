@@ -31,6 +31,19 @@ function createDatabase(cb) {
     'updatedAt TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,' +
     'INDEX (email)' +
     ') ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_unicode_ci;';
+  var createVisitsTableQuery = 'CREATE TABLE IF NOT EXISTS visits(' +
+    'visit_id BINARY(16) NOT NULL PRIMARY KEY,' // let's put this, not the url_hash, in the API. should it be visit_uuid?
+    'fxa_id BINARY(16) NOT NULL,' +
+    'url_hash VARCHAR(255) NOT NULL,' +  // actually this is a SHA-1, it has a fixed size
+    'url TEXT NOT NULL,' +
+    'title VARCHAR(128),' +
+    'referrer TEXT, ' +
+    'search_terms VARCHAR(64), ' + // is this a good length?
+    'engagement_time INT, ' + 
+    'createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,' +
+    'updatedAt TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,' +
+    'INDEX (fxa_id)' + // TODO write out all the queries, then pick the indexes
+    ') ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_unicode_ci;';
 
   conn.connect(function (err) {
     if (err) {
