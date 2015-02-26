@@ -58,9 +58,9 @@ function createTestData(cb) {
     log.verbose(i, item);
     visitController.post(generateTestRequest(item, i), function(resp) {
       if (resp instanceof Error) {
-        log.warn('visit creation failed: ' + JSON.stringify(resp));
+        log.warn('visit creation not queued: ' + JSON.stringify(resp));
       } else {
-        log.verbose('visit creation success: ' + JSON.stringify(resp));
+        log.verbose('visit creation queued');
       }
     });
   });
@@ -68,7 +68,7 @@ function createTestData(cb) {
   // for now, just wait 30 seconds, then fire the callback blindly
   setTimeout(function() {
     cb(null, '30 seconds is up, hopefully the scraper jobs are all done!');
-    process.exit();
+    //process.exit();
   }, 1000 * 30);
 }
 
@@ -89,6 +89,6 @@ createTestUser(function (err) {
     } else {
       log.verbose('should now exit; done invoked');
     }
-    process.exit();
+    //process.exit();
   });
 });

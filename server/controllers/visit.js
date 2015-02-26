@@ -32,6 +32,7 @@ var visitController = {
     });
   },
   post: function(request, reply) {
+    log.verbose('visitController.post invoked with request payload ' + JSON.stringify(request.payload));
     var p = request.payload;
     var userId = request.auth.credentials;
 
@@ -62,6 +63,13 @@ var visitController = {
   },
   // TODO this really belongs on a model, not a controller
   _create: function(userId, url, title, visitedAt, visitId, priority) {
+    log.verbose('visitController._create invoked with arguments ' + JSON.stringify(arguments));
+    if (!userId) {
+      throw new Error('_create invoked with no userId');
+    }
+    if (!url) {
+      throw new Error('_create invoked with no url');
+    }
     visitId = visitId || uuid.v4();
     priority = priority || 'regular';
     var urlHash = crypto.createHash('sha1').update(url).digest('hex').toString();
@@ -74,6 +82,7 @@ var visitController = {
       visitedAt: visitedAt
     };
 
+    log.verbose('about to queue.createVisit with data ' + JSON.stringify(data));
     queue.createVisit({ priority: priority, data: data });
     if (isEmbedlyEnabled) {
       // extractPage doesn't need all these keys, but the extras won't hurt anything

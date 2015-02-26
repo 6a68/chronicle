@@ -11,7 +11,7 @@ var log = require('../logger')('server.routes.visits');
 var visitController = require('../controllers/visit');
 var visitsController = require('../controllers/visits');
 
-var visitSchema = Joi.object().contains({
+var visitSchema = Joi.object().keys({
   url: Joi.string().required(),
   title: Joi.string().max(128).required(),
   visitedAt: Joi.date().iso().required(),
@@ -41,7 +41,7 @@ var visitsRoutes = [{
     handler: visitController.post,
     auth: 'session',
     validate: {
-      payload: Joi.required().includes(visitSchema)
+      payload: visitSchema
     },
     tags: ['visits']
   }
@@ -53,8 +53,8 @@ var visitsRoutes = [{
     auth: 'session',
     validate: {
       payload: {
-        priority: Joi.any().only('high', 'low', 'regular').default('regular'),
-        visits: Joi.required().array().includes(visitSchema).min(1).max(50)
+        priority: Joi.any().valid('high', 'low', 'regular').default('regular'),
+        visits: Joi.array().required().includes(visitSchema).min(1).max(50)
       }
     },
     tags: ['visits']

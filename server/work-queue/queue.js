@@ -32,46 +32,42 @@ var multiWorkerOpts = {
   connection: connectionDetails,
   queues: ['chronicle'],
   minTaskProcessors: 1,
-  maxTaskProcessors: 30,
+  maxTaskProcessors: 1,
 };
+
+var worker = new nr.worker({connection: connectionDetails, queues: ['chronicle']}, jobs, function() {
+  worker.on('start',           function(){ console.log("worker started"); })
+  worker.on('end',             function(){ console.log("worker ended"); })
+  worker.on('cleaning_worker', function(worker, pid){ console.log("cleaning old worker " + worker); })
+  worker.on('poll',            function(queue){ console.log("worker polling " + queue); })
+  worker.on('job',             function(queue, job){ console.log("working job " + queue + " " + JSON.stringify(job)); })
+  worker.on('reEnqueue',       function(queue, job, plugin){ console.log("reEnqueue job (" + plugin + ") " + queue + " " + JSON.stringify(job)); })
+  worker.on('success',         function(queue, job, result){ console.log("job success " + queue + " " + JSON.stringify(job) + " >> " + result); })
+  worker.on('failure',         function(queue, job, failure){ console.log("job failure " + queue + " " + JSON.stringify(job) + " >> " + failure); })
+  worker.on('error',           function(queue, job, error){ console.log("error " + queue + " " + JSON.stringify(job) + " >> " + error); })
+  worker.on('pause',           function(){ console.log("worker paused"); })
+  worker.workerCleanup();
+  worker.start();
+});
+/*
 var multiWorker = new nr.multiWorker(multiWorkerOpts, jobs, function() {
-  multiWorker.on('start', function(workerId){
-    log.debug('worker[' + workerId + '] started');
-  });
-  multiWorker.on('end', function(workerId){
-    log.debug('worker[' + workerId + '] ended');
-  });
-  multiWorker.on('cleaning_worker', function(workerId, worker, pid){
-    log.debug('cleaning old worker ' + worker);
-  });
-  multiWorker.on('poll', function(workerId, queue){
-    log.verbose('worker[' + workerId + '] polling ' + queue);
-  });
-  multiWorker.on('job', function(workerId, queue, job){
-    log.info('worker[' + workerId + '] working job ' + queue + ' ' + JSON.stringify(job));
-  });
-  multiWorker.on('reEnqueue', function(workerId, queue, job, plugin){
-    log.verbose('worker[' + workerId + '] reEnqueue job (' + plugin + ') ' +
-      queue + ' ' + JSON.stringify(job));
-  });
-  multiWorker.on('success', function(workerId, queue, job, result){
+  multiWorker.on('success', function(workerId, queueName, job, result){
     // TODO do something with result?
-    log.info('worker[' + workerId + '] job success ' + queue);
-    log.verbose('worker[' + workerId + '] job success ' + queue + ' ' +
+    log.info('worker[' + workerId + '] job success ' + queueName);
+    log.verbose('worker[' + workerId + '] job success ' + queueName + ' ' +
       JSON.stringify(job) + ' >> ' + result);
+  jkk
   });
-  multiWorker.on('failure', function(workerId, queue, job, failure){
+  multiWorker.on('failure', function(workerId, queueName, job, failure){
     log.warn('worker failed, job will be retried in 10 seconds');
-    log.verbose('worker[' + workerId + '] job failure ' + queue + ' ' +
+    log.verbose('worker[' + workerId + '] job failure ' + queueName + ' ' +
       JSON.stringify(job) + ' >> ' + failure);
     
-    // TODO retry on failure
   });
-  multiWorker.on('error', function(workerId, queue, job, error){
+  multiWorker.on('error', function(workerId, queueName, job, error){
     log.warn('worker errored');
-    log.verbose('worker[' + workerId + '] error ' + queue + ' ' +
+    log.verbose('worker[' + workerId + '] error ' + queueName + ' ' +
       JSON.stringify(job) + ' >> ' + error);
-    // TODO retry on failure
   });
   multiWorker.on('pause', function(workerId){
     log.verbose('worker[' + workerId + '] paused');
@@ -89,6 +85,7 @@ var multiWorker = new nr.multiWorker(multiWorkerOpts, jobs, function() {
   log.verbose('queue workers are ready');
   workersReady.resolve();
 });
+*/
 
 // TODO add reject handler when we listen for queue/worker startup failures
 //Q.all([queueReady.promise, workersReady.promise]).then(function() {
@@ -97,21 +94,31 @@ var multiWorker = new nr.multiWorker(multiWorkerOpts, jobs, function() {
 // (not between queue and queue caller, those should be fire-and-forget)
 module.exports = {
   createVisit: function(o) {
-    log.verbose('createVisit queue method invoked, o is ' + JSON.stringify(o));
-    queue.enqueue('chronicle', 'createVisit', o, function(err, data) {
+    log.critical('createVisit queue method invoked, we are passing in o.data: ' + JSON.stringify(o.data));
+    var args = {
+      url: o.data.url,
+      userId: o.data.userId,
+      id: o.data.id,
+      title: o.data.title,
+      visitedAt: o.data.visitedAt
+    };
+    log.critical('createVisit has now copied everything into a new args variable: ' + JSON.stringify(args));
+
+    queue.enqueue('chronicle', 'createVisit', o.data, function(err, resp) {
+      log.trace('what happened after we enqueued?');
       if (err) {
-        log.warn('createVisit job failed: ' + err);
+        log.critical('createVisit job failed to enqueue: ' + err);
       }
-      log.verbose('createVisit job succeeded: ' + data);
+      log.critical('createVisit job enqueued? ' + resp);
     });
   },
   extractPage: function(o) {
-    log.verbose('extractPage queue method invoked, o is ' + JSON.stringify(o));
-    queue.enqueue('chronicle', 'extractPage', o, function(err, data) {
+    log.critical('extractPage queue method invoked, o is ' + JSON.stringify(o));
+    queue.enqueue('chronicle', 'extractPage', [o.data], function(err, data) {
       if (err) {
-        log.warn('createVisit job failed: ' + err);
+        log.critical('extractPage job failed to enqueue: ' + err);
       }
-      log.verbose('createVisit job succeeded: ' + data);
+      log.critical('extractPage job enqueued? ' + data);
     });
   }
 };
@@ -119,6 +126,6 @@ module.exports = {
 
 process.on('SIGINT', function () {
   log.warn('process exiting, shutting down workers');
-  multiWorker.stop();
+  worker.end();
   process.exit();
 });
