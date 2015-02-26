@@ -41,15 +41,15 @@ var visit = {
   },
   // 1. find a complex way to combine both queries on the DB side
   // 2. (simpler) perform two simple queries and roll them together here
-  get: function(userId, visitId, cb) {
+  get: function(userId, id, cb) {
     var name = 'models.visit.get';
-    _verbose(name + ' called', userId, visitId);
+    _verbose(name + ' called', userId, id);
     // it's actually way simpler to SELECT *, and re-select additional columns,
     // vs enumerating everything just to avoid two 'id's in the results.
     var query = 'SELECT visits.id as visit_id, visits.user_id as user_id, * ' +
     'FROM visits LEFT JOIN user_pages ON visits.user_page_id = user_pages.id ' +
     'WHERE visits.id = $1 AND visits.user_id = $2';
-    var params = [visitId, userId];
+    var params = [id, userId];
     postgres.query(query, params)
       .then(function(results) {
         // return a promise that resolves to the transformed results
@@ -61,11 +61,11 @@ var visit = {
   // TODO: for right now, doing an exact match on urlHash, visitedAt.
   // We might want to look in a neighborhood of those values later, in which
   // case we'd need a similarity metric for the url.
-  create: function(userId, visitId, visitedAt, url, urlHash, title, cb) {
+  create: function(userId, id, visitedAt, url, urlHash, title, cb) {
     // XXX we create only a few user_page fields synchronously; the rest
     // are filled in async by the scraper worker
     var name = 'models.visit.create';
-    _verbose(name + ' called', userId, visitId, visitedAt, url, title);
+    _verbose(name + ' called', userId, id, visitedAt, url, title);
     // create the user_page if it doesn't exist, and return the user_page id
     // whether or not you just created it
     var lazyCreateUserPageQuery =
@@ -92,7 +92,7 @@ var visit = {
       .fail(visit._onRejected.bind(visit, name + ' failed', cb))
       .then(function(results) {
         userPageId = results && results.id;
-        var visitParams = [visitId, userId, userPageId, visitedAt];
+        var visitParams = [id, userId, userPageId, visitedAt];
         return postgres.query(createVisitQuery, visitParams, noCamel);
       })
       .fail(visit._onRejected.bind(visit, name + ' postgres insert failed', cb))
@@ -114,12 +114,12 @@ var visit = {
       .done(visit._onFulfilled.bind(visit, name + ' succeeded', cb),
             visit._onRejected.bind(visit, name + ' elasticsearch insert failed', cb));
   },
-  delete: function(userId, visitId, cb) {
+  delete: function(userId, id, cb) {
     // delete the visit if it exists.
     // delete the visit's userPage if no other visits have that page.
     var name = 'models.visit.delete';
     var userPageId;
-    postgres.query('DELETE FROM visits WHERE user_id = $1 AND id = $2 RETURNING user_page_id', [userId, visitId])
+    postgres.query('DELETE FROM visits WHERE user_id = $1 AND id = $2 RETURNING user_page_id', [userId, id])
       .fail(visit._onRejected.bind(visit, name + ' failed to delete visit', cb))
       .then(function(result) {
         _verbose('delete returning result gives us: ' + JSON.stringify(result));
