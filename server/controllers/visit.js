@@ -4,9 +4,13 @@
 
 'use strict';
 
+var crypto = require('crypto');
+var uuid = require('uuid');
 var Boom = require('boom');
 
+var queue = require('../work-queue/queue');
 var config = require('../config');
+var isEmbedlyEnabled = config.get('embedly_enabled');
 var log = require('../logger')('server.controllers.visit');
 var visit = require('../models/visit');
 var visitView = require('../views/visit');
@@ -27,6 +31,13 @@ var visitController = {
       }
     });
   },
+  post: function(request, reply) {
+    var p = request.payload;
+    var userId = request.auth.credentials;
+
+    var created = visitController._create(userId, p.url, p.title, p.visitedAt, p.visitId);
+    reply(visitView.render(created));
+  },
   put: function(request, reply) {
     var userId = request.auth.credentials;
     var visitId = request.params.visitId;
@@ -36,7 +47,6 @@ var visitController = {
         log.warn(err);
         return reply(Boom.create(500));
       }
-      // return the visit so backbone can update the model
       reply(visitView.render(result));
     });
   },
@@ -49,6 +59,29 @@ var visitController = {
       }
       reply();
     });
+  },
+  // TODO this really belongs on a model, not a controller
+  _create: function(userId, url, title, visitedAt, visitId, priority) {
+    visitId = visitId || uuid.v4();
+    priority = priority || 'regular';
+    var urlHash = crypto.createHash('sha1').update(url).digest('hex').toString();
+    var data = {
+      userId: userId,
+      id: visitId,
+      url: url,
+      urlHash: urlHash,
+      title: title,
+      visitedAt: visitedAt
+    };
+
+    queue.createVisit({ priority: priority, data: data });
+    if (isEmbedlyEnabled) {
+      // extractPage doesn't need all these keys, but the extras won't hurt anything
+      // XXX the extractPage job checks if the user_page has been scraped recently
+      queue.extractPage({ priority: priority, data: data });
+    }
+
+    return data;
   }
 };
 

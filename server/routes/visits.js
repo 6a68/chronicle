@@ -8,6 +8,7 @@ var crypto = require('crypto');
 var Joi = require('joi');
 
 var log = require('../logger')('server.routes.visits');
+var visitController = require('../controllers/visit');
 var visitsController = require('../controllers/visits');
 
 var visitSchema = Joi.object().contains({
@@ -37,7 +38,7 @@ var visitsRoutes = [{
   method: 'POST',
   path: '/v1/visits',
   config: {
-    handler: visitsController.post,
+    handler: visitController.post,
     auth: 'session',
     validate: {
       payload: Joi.required().includes(visitSchema)

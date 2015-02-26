@@ -18,7 +18,7 @@ if (!config.get('testUser_enabled')) {
 
 var log = require('../server/logger')('bin.createTestData');
 var user = require('../server/models/user');
-var visitsController = require('../server/controllers/visits');
+var visitController = require('../server/controllers/visit');
 var testUrls = require('../config/test-urls');
 
 var HOURS_IN_MS = 1000 * 60 * 60;
@@ -56,7 +56,7 @@ function createTestData(cb) {
 
   testUrls.forEach(function(item, i) {
     log.verbose(i, item);
-    visitsController.post(generateTestRequest(item, i), function(resp) {
+    visitController.post(generateTestRequest(item, i), function(resp) {
       if (resp instanceof Error) {
         log.warn('visit creation failed: ' + JSON.stringify(resp));
       } else {
